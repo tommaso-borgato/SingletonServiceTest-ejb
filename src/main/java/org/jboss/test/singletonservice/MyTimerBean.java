@@ -9,9 +9,11 @@ import javax.ejb.TimerService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 /**
- * This is a known workaround for clustered timers. SingletonService will start this MyTimer.
+ * Created with IntelliJ IDEA.
+ * User: jkudrnac
+ *
+ * MyTimer should run only once in the whole cluster: started by TestingSingletonService, which runs only once in the whole cluster.
  */
 @Singleton
 public class MyTimerBean implements MyTimer {

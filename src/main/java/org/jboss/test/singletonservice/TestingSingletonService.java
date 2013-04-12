@@ -16,6 +16,7 @@ import java.util.logging.Logger;
  * User: jkudrnac
  */
 
+
 public class TestingSingletonService implements Service<String>{
    private AtomicBoolean started = new AtomicBoolean(false);
     public static final ServiceName SERVICE_NAME = ServiceName.JBOSS.append("test", "myservice");

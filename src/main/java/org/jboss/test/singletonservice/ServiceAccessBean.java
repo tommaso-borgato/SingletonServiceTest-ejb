@@ -25,6 +25,10 @@ import org.jboss.ejb3.annotation.Clustered;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Created with IntelliJ IDEA.
+ * User: jkudrnac
+ */
 @Stateless
 @Clustered
 public class ServiceAccessBean implements ServiceAccess {

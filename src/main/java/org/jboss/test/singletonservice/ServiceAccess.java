@@ -18,12 +18,16 @@ package org.jboss.test.singletonservice;
 
 import javax.ejb.Remote;
 
+/**
+ * Created with IntelliJ IDEA.
+ * User: jkudrnac
+ */
+
 @Remote
 public interface ServiceAccess {
     /**
-     * Provide the node name where the scheduler is started.
-     * 
-     * @return name of the cluster node where the service
+     *
+     * @return name of the cluster node where the service is running
      */
     public abstract String getNodeNameOfService();
 }

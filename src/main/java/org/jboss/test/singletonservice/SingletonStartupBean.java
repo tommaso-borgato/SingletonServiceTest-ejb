@@ -6,7 +6,6 @@ import org.jboss.as.server.ServerEnvironment;
 import org.jboss.as.server.ServerEnvironmentService;
 import org.jboss.msc.service.AbstractServiceListener;
 import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.ServiceController.Transition;
 import org.jboss.msc.service.ServiceListener;
 
 
@@ -18,7 +17,6 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 
 /**
  * Created with IntelliJ IDEA.
