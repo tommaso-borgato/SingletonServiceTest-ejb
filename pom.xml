@@ -3,10 +3,14 @@
    <modelVersion>4.0.0</modelVersion>
     <artifactId>SStest-ejb-timer</artifactId>
     <groupId>org.jboss.test</groupId>
-    <version>6.1-timer</version>
+    <version>1.0-SNAPSHOT</version>
 
    <name>SingletonTest EJB module</name>
    <packaging>ejb</packaging>
+
+    <scm>
+       <developerConnection>scm:git:git@github.com:jkudrnac/SingletonServiceTest-ejb.git</developerConnection>
+    </scm>
 
     <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
