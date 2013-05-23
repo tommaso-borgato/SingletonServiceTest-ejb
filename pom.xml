@@ -9,7 +9,7 @@
    <packaging>ejb</packaging>
 
     <scm>
-       <developerConnection>scm:git:git@github.com:jkudrnac/SingletonServiceTest-ejb.git</developerConnection>
+       <developerConnection>scm:git:ssh@github.com:jkudrnac/SingletonServiceTest-ejb.git</developerConnection>
     </scm>
 
     <properties>
