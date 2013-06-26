@@ -51,14 +51,6 @@ public class TestingSingletonService implements Service<String>{
         this.nodeName = this.env.getValue().getNodeName();
         LOGGER.log(Level.INFO,"Service started on "+ this.getValue());
 
-        try {
-            InitialContext ic = new InitialContext();
-            MyTimer myMyTimer = (MyTimer) ic.lookup("global/SStest-ejb-timer/MyTimerBean!org.jboss.test.singletonservice.MyTimer");
-            myMyTimer.initialize("timer @" + this.nodeName + " " + new Date());
-        } catch (NamingException e) {
-            throw new StartException("Could not initialize MyTimer service",e);
-        }
-
     }
 
 
