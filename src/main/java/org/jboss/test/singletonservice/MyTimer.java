@@ -1,13 +1,7 @@
 package org.jboss.test.singletonservice;
 
-/**
- * Created with IntelliJ IDEA.
- * User: jkudrnac
- */
 public interface MyTimer {
+    void initialize(String info);
 
-    public abstract void initialize(String info);
-
-    public abstract void stop();
-
+    void stop();
 }
