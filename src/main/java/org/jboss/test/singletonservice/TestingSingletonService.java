@@ -10,7 +10,6 @@ import org.jboss.msc.value.InjectedValue;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;

@@ -23,7 +23,7 @@ public class MyTimerBean implements MyTimer {
     private TimerService timerService;
 
     @Timeout
-    public void scheduler(Timer timer) {
+    public void onTimer(Timer timer) {
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         LOGGER.info(timer.getInfo() + " " + df.format(new Date()));
     }

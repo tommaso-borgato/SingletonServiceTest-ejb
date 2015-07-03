@@ -1,14 +1,12 @@
 package org.jboss.test.singletonservice;
 
 import org.jboss.as.server.CurrentServiceContainer;
-import org.jboss.ejb3.annotation.Clustered;
 import org.jboss.msc.service.ServiceController;
 
 import javax.ejb.Stateless;
 import java.util.logging.Logger;
 
 @Stateless
-@Clustered
 public class ServiceAccessBean implements ServiceAccess {
     private static final Logger LOGGER = Logger.getLogger(ServiceAccessBean.class.getName());
 

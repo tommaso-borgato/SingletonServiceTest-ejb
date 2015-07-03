@@ -1,12 +1,14 @@
 package org.jboss.test.singletonservice;
 
-import org.jboss.as.clustering.singleton.SingletonService;
 import org.jboss.as.server.CurrentServiceContainer;
 import org.jboss.as.server.ServerEnvironment;
 import org.jboss.as.server.ServerEnvironmentService;
 import org.jboss.msc.service.AbstractServiceListener;
+import org.jboss.msc.service.ServiceContainer;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceListener;
+import org.wildfly.clustering.singleton.SingletonServiceBuilderFactory;
+import org.wildfly.clustering.singleton.election.SimpleSingletonElectionPolicy;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -22,13 +24,22 @@ import java.util.logging.Logger;
 public class SingletonStartupBean {
     private static final Logger LOGGER = Logger.getLogger(SingletonStartupBean.class.getName());
 
+    private static final String CACHE_CONTAINER_NAME = "server";
+    private static final String CACHE_NAME = "default";
+
     @PostConstruct
     protected void startup() {
         LOGGER.info("SingletonStartupBean will be activated");
 
         TestingSingletonService service = new TestingSingletonService();
-        SingletonService<String> singleton = new SingletonService<String>(service, TestingSingletonService.SERVICE_NAME);
-        ServiceController<String> controller = singleton.build(CurrentServiceContainer.getServiceContainer())
+        ServiceContainer serviceContainer = CurrentServiceContainer.getServiceContainer();
+        SingletonServiceBuilderFactory factory = (SingletonServiceBuilderFactory) serviceContainer
+                .getRequiredService(SingletonServiceBuilderFactory.SERVICE_NAME.append(CACHE_CONTAINER_NAME, CACHE_NAME))
+                .getValue();
+        ServiceController<String> controller = factory.createSingletonServiceBuilder(TestingSingletonService.SERVICE_NAME, service)
+                .electionPolicy(new SimpleSingletonElectionPolicy())
+                .requireQuorum(1)
+                .build(serviceContainer)
                 .addDependency(ServerEnvironmentService.SERVICE_NAME, ServerEnvironment.class, service.env)
                 .install();
 
@@ -43,7 +54,7 @@ public class SingletonStartupBean {
 
     @PreDestroy
     protected void destroy() {
-        LOGGER.info("TestingSingletonServiceBean will be removed");
+        LOGGER.info("TestingSingletonService will be removed");
         ServiceController controller = CurrentServiceContainer.getServiceContainer().getRequiredService(TestingSingletonService.SERVICE_NAME);
         controller.setMode(ServiceController.Mode.REMOVE);
         try {
@@ -76,7 +87,7 @@ public class SingletonStartupBean {
             LOGGER.info("Service controller state is now " + state);
             if (state != targetState)
                 throw new IllegalStateException("Failed to wait for state to transition to " + targetState
-                        + ". Current state is " + state + ". " + controller.getStartException());
+                        + ". Current state is " + state + ". Possible start exception:" + controller.getStartException());
         }
     }
 
