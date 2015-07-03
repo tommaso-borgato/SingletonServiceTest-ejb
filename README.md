@@ -24,3 +24,8 @@ This application uses a `@Singleton @Startup` EJB because:
 ## Build ##
 
 The standard Maven is everything you need: `mvn clean install`
+
+## Versions
+
+Major version number is the generation number of JBoss EAP that is targeted by the application.
+Minor version number is specific to this application.
