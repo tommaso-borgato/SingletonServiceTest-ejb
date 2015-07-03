@@ -55,7 +55,13 @@ public class SingletonStartupBean {
     @PreDestroy
     protected void destroy() {
         LOGGER.info("TestingSingletonService will be removed");
-        ServiceController controller = CurrentServiceContainer.getServiceContainer().getRequiredService(TestingSingletonService.SERVICE_NAME);
+        ServiceController controller = CurrentServiceContainer.getServiceContainer().getService(TestingSingletonService.SERVICE_NAME);
+        if (controller == null) {
+            // removed already?
+            LOGGER.warning("TestingSingletonService not found, removed already?");
+            return;
+        }
+
         controller.setMode(ServiceController.Mode.REMOVE);
         try {
             wait(controller, EnumSet.of(ServiceController.State.UP, ServiceController.State.STOPPING, ServiceController.State.DOWN), ServiceController.State.REMOVED);
