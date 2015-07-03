@@ -11,7 +11,7 @@ Testing application for the HA singleton service feature. It contains:
     - `initialize`, which creates an EJB timer that logs a message each second; this method is called by the
       `TestingSingletonService` during activation
     - `stop`, which cancels the previously created EJB timer; this method is called by the
-      `TestingSingletonService` during removal (TODO but it in fact isn't, which is probably a bug?)
+      `TestingSingletonService` during removal
 
 Even though the application is deployed on all cluster nodes, the service is active on only one node at a time.
 

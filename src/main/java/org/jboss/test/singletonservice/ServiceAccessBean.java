@@ -5,7 +5,6 @@ import org.jboss.ejb3.annotation.Clustered;
 import org.jboss.msc.service.ServiceController;
 
 import javax.ejb.Stateless;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Stateless
@@ -14,10 +13,11 @@ public class ServiceAccessBean implements ServiceAccess {
     private static final Logger LOGGER = Logger.getLogger(ServiceAccessBean.class.getName());
 
     public String getNodeNameOfService() {
-        LOGGER.log(Level.INFO, "getNodeNameOfService() is called()");
+        LOGGER.info("getNodeNameOfService() is called");
         ServiceController<?> service = CurrentServiceContainer.getServiceContainer().getService(
                 TestingSingletonService.SERVICE_NAME);
-        LOGGER.log(Level.FINE,"SERVICE " + service);
+        LOGGER.fine("Service: " + service);
+
         if (service != null) {
             return (String) service.getValue();
         } else {

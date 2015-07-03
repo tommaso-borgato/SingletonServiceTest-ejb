@@ -7,7 +7,9 @@ import javax.ejb.Timeout;
 import javax.ejb.Timer;
 import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
-import java.util.logging.Level;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.logging.Logger;
 
 /**
@@ -22,7 +24,8 @@ public class MyTimerBean implements MyTimer {
 
     @Timeout
     public void scheduler(Timer timer) {
-        LOGGER.log(Level.INFO, "MyTimer says: " + timer.getInfo());
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        LOGGER.info(timer.getInfo() + " " + df.format(new Date()));
     }
 
     @Override
@@ -34,9 +37,9 @@ public class MyTimerBean implements MyTimer {
 
     @Override
     public void stop() {
-        LOGGER.log(Level.INFO, "Stopping timer.");
+        LOGGER.info("Stopping timer");
         for (Timer timer : timerService.getTimers()) {
-            LOGGER.log(Level.INFO, "Stop timer: " + timer.getInfo());
+            LOGGER.info("Stop timer: " + timer.getInfo());
             timer.cancel();
         }
     }

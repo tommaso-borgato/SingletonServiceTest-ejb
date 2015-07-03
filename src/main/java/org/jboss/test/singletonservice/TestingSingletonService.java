@@ -34,31 +34,40 @@ public class TestingSingletonService implements Service<String> {
     }
 
     @Override
-    public void stop(StopContext stopContext) {
-        if (!started.compareAndSet(true, false)) {
-            LOGGER.log(Level.INFO, "The service '" + this.getClass().getName() + "' is not active!");
-        } else {
-            LOGGER.log(Level.INFO, "Stop service '" + this.getClass().getName() + "' on " + this.getValue());
+    public void start(StartContext startContext) throws StartException {
+        if (!started.compareAndSet(false, true)) {
+            throw new StartException("The service is already started!");
+        }
+
+        LOGGER.info("Start service '" + this.getClass().getName() + "'");
+
+        this.nodeName = this.env.getValue().getNodeName();
+
+        LOGGER.info("Service started on " + this.getValue());
+
+        try {
+            InitialContext ic = new InitialContext();
+            MyTimer myTimer = (MyTimer) ic.lookup("java:global/SStest-ejb/MyTimerBean");
+            myTimer.initialize("timer @" + this.nodeName);
+        } catch (NamingException e) {
+            throw new StartException("Could not initialize MyTimer", e);
         }
     }
 
     @Override
-    public void start(StartContext startContext) throws StartException {
-        if (!started.compareAndSet(false, true)) {
-            throw new StartException("The service is still started!");
-        }
-        LOGGER.log(Level.INFO, "Start service '" + this.getClass().getName() + "'");
+    public void stop(StopContext stopContext) {
+        if (!started.compareAndSet(true, false)) {
+            LOGGER.info("The service '" + this.getClass().getName() + "' is not active!");
+        } else {
+            LOGGER.info("Stop service '" + this.getClass().getName() + "' on " + this.nodeName);
 
-        this.nodeName = this.env.getValue().getNodeName();
-
-        LOGGER.log(Level.INFO, "Service started on " + this.getValue());
-
-        try {
-            InitialContext ic = new InitialContext();
-            MyTimer myMyTimer = (MyTimer) ic.lookup("global/SStest-ejb-timer/MyTimerBean!org.jboss.test.singletonservice.MyTimer");
-            myMyTimer.initialize("timer @" + this.nodeName + " " + new Date());
-        } catch (NamingException e) {
-            throw new StartException("Could not initialize MyTimer service", e);
+            try {
+                InitialContext ic = new InitialContext();
+                MyTimer myTimer = (MyTimer) ic.lookup("java:global/SStest-ejb/MyTimerBean");
+                myTimer.stop();
+            } catch (NamingException e) {
+                LOGGER.log(Level.SEVERE, "Could not stop MyTimer", e);
+            }
         }
     }
 }
