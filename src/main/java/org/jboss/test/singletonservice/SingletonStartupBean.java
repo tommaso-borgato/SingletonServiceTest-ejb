@@ -3,10 +3,9 @@ package org.jboss.test.singletonservice;
 import org.jboss.as.server.CurrentServiceContainer;
 import org.jboss.as.server.ServerEnvironment;
 import org.jboss.as.server.ServerEnvironmentService;
-import org.jboss.msc.service.AbstractServiceListener;
 import org.jboss.msc.service.ServiceContainer;
 import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.ServiceListener;
+import org.jboss.msc.service.StabilityMonitor;
 import org.wildfly.clustering.singleton.SingletonServiceBuilderFactory;
 import org.wildfly.clustering.singleton.election.SimpleSingletonElectionPolicy;
 
@@ -14,9 +13,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.logging.Level;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 @Singleton
@@ -29,7 +26,7 @@ public class SingletonStartupBean {
 
     @PostConstruct
     protected void startup() {
-        LOGGER.info("SingletonStartupBean will be activated");
+        LOGGER.info("TestingSingletonService will be activated");
 
         TestingSingletonService service = new TestingSingletonService();
         ServiceContainer serviceContainer = CurrentServiceContainer.getServiceContainer();
@@ -43,13 +40,7 @@ public class SingletonStartupBean {
                 .addDependency(ServerEnvironmentService.SERVICE_NAME, ServerEnvironment.class, service.env)
                 .install();
 
-        controller.setMode(ServiceController.Mode.ACTIVE);
-        try {
-            wait(controller, EnumSet.of(ServiceController.State.DOWN, ServiceController.State.STARTING), ServiceController.State.UP);
-            LOGGER.info("SingletonStartupBean has activated the TestingSingletonService");
-        } catch (IllegalStateException e) {
-            LOGGER.log(Level.SEVERE, "TestingSingletonService not started", e);
-        }
+        moveToStableState(controller, ServiceController.Mode.ACTIVE, ServiceController.State.UP);
     }
 
     @PreDestroy
@@ -57,51 +48,29 @@ public class SingletonStartupBean {
         LOGGER.info("TestingSingletonService will be removed");
         ServiceController controller = CurrentServiceContainer.getServiceContainer().getService(TestingSingletonService.SERVICE_NAME);
         if (controller == null) {
-            // removed already?
             LOGGER.warning("TestingSingletonService not found, removed already?");
             return;
         }
 
-        controller.setMode(ServiceController.Mode.REMOVE);
+        moveToStableState(controller, ServiceController.Mode.REMOVE, ServiceController.State.REMOVED);
+    }
+
+    private void moveToStableState(ServiceController controller, ServiceController.Mode targetMode, ServiceController.State targetState) {
+        StabilityMonitor stabilityMonitor = new StabilityMonitor();
+        stabilityMonitor.addController(controller);
+        controller.setMode(targetMode);
         try {
-            wait(controller, EnumSet.of(ServiceController.State.UP, ServiceController.State.STOPPING, ServiceController.State.DOWN), ServiceController.State.REMOVED);
-            LOGGER.info("SingletonStartupBean has removed the TestingSingletonService");
-        } catch (IllegalStateException e) {
-            LOGGER.log(Level.SEVERE, "TestingSingletonService not removed", e);
-        }
-    }
-
-    private static <T> void wait(ServiceController<T> controller, Collection<ServiceController.State> expectedStates, ServiceController.State targetState) {
-        if (controller.getState() != targetState) {
-            ServiceListener<T> listener = new NotifyingServiceListener<T>();
-            controller.addListener(listener);
-            try {
-                synchronized (controller) {
-                    int maxRetry = 5;
-                    while ((expectedStates.contains(controller.getState())) && (maxRetry > 0)) {
-                        LOGGER.info("Service controller state is " + controller.getState() + ", waiting for transition to " + targetState);
-                        controller.wait(5000L);
-                        maxRetry--;
-                    }
-                }
-            } catch (InterruptedException e) {
-                LOGGER.info("Waiting for transition to " + targetState + " interrupted");
-                Thread.currentThread().interrupt();
+            stabilityMonitor.awaitStability(10, TimeUnit.SECONDS);
+            if (controller.getState() != targetState) {
+                LOGGER.severe("TestingSingletonService didn't move to " + targetState);
+            } else {
+                LOGGER.info("TestingSingletonService moved to " + targetState);
             }
-            controller.removeListener(listener);
-            ServiceController.State state = controller.getState();
-            LOGGER.info("Service controller state is now " + state);
-            if (state != targetState)
-                throw new IllegalStateException("Failed to wait for state to transition to " + targetState
-                        + ". Current state is " + state + ". Possible start exception:" + controller.getStartException());
-        }
-    }
-
-    private static class NotifyingServiceListener<T> extends AbstractServiceListener<T> {
-        public void transition(ServiceController<? extends T> controller, ServiceController.Transition transition) {
-            synchronized (controller) {
-                controller.notify();
-            }
+        } catch (InterruptedException e) {
+            LOGGER.info("Waiting for transition to " + targetState + " interrupted");
+            Thread.currentThread().interrupt();
+        } finally {
+            stabilityMonitor.removeController(controller);
         }
     }
 }
