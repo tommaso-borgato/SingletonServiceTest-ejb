@@ -7,6 +7,7 @@ import org.jboss.msc.service.ServiceContainer;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.StabilityMonitor;
 import org.wildfly.clustering.singleton.SingletonServiceBuilderFactory;
+import org.wildfly.clustering.singleton.SingletonServiceName;
 import org.wildfly.clustering.singleton.election.SimpleSingletonElectionPolicy;
 
 import javax.annotation.PostConstruct;
@@ -22,7 +23,6 @@ public class SingletonStartupBean {
     private static final Logger LOGGER = Logger.getLogger(SingletonStartupBean.class.getName());
 
     private static final String CACHE_CONTAINER_NAME = "server";
-    private static final String CACHE_NAME = "default";
 
     @PostConstruct
     protected void startup() {
@@ -31,7 +31,7 @@ public class SingletonStartupBean {
         TestingSingletonService service = new TestingSingletonService();
         ServiceContainer serviceContainer = CurrentServiceContainer.getServiceContainer();
         SingletonServiceBuilderFactory factory = (SingletonServiceBuilderFactory) serviceContainer
-                .getRequiredService(SingletonServiceBuilderFactory.SERVICE_NAME.append(CACHE_CONTAINER_NAME, CACHE_NAME))
+                .getRequiredService(SingletonServiceName.BUILDER.getServiceName(CACHE_CONTAINER_NAME))
                 .getValue();
         ServiceController<String> controller = factory.createSingletonServiceBuilder(TestingSingletonService.SERVICE_NAME, service)
                 .electionPolicy(new SimpleSingletonElectionPolicy())
