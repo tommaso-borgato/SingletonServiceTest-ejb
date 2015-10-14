@@ -1,4 +1,4 @@
-# SingletonServiceTest-ejb #
+# SingletonServiceTest-ejb
 
 Testing application for the HA singleton service feature. It contains:
 
@@ -21,9 +21,9 @@ This application uses a `@Singleton @Startup` EJB because:
 - this approach predates the entire `ServiceActivator` thing
 - the `ServiceActivator` approach is tested with quickstarts testing
 
-## Build ##
+## Build
 
-The standard Maven is everything you need: `mvn clean install`
+The standard Maven incantation is everything you need: `mvn clean install`. Maven 3 is assumed.
 
 ## Versions
 
