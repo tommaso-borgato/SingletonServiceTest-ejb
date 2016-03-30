@@ -12,6 +12,7 @@
 
     <modules>
         <module>api</module>
+        <module>client</module>
         <module>common</module>
         <module>service-activator</module>
         <module>startup-ejb</module>
