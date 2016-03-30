@@ -13,6 +13,30 @@
     <name>SingletonServiceTest - Service Activator + Policy from Singleton Subsystem</name>
     <packaging>ejb</packaging>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.jboss.test</groupId>
+            <artifactId>SStest-ejb-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.test</groupId>
+            <artifactId>SStest-ejb-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jboss.msc</groupId>
+            <artifactId>jboss-msc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly</groupId>
+            <artifactId>wildfly-clustering-singleton-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-server</artifactId>
+        </dependency>
+    </dependencies>
+
     <build>
         <plugins>
             <plugin>

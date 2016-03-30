@@ -40,7 +40,7 @@ singleton policy.
 An application that activates the singleton service using `ServiceActivator` and uses a singleton policy defined
 in the `singleton` subsystem.
 
-__TODO__: this is not done yet!
+- `SingletonActivator`, which is a `ServiceActivator` that installs and activates the `TestingSingletonService`
 
 ## Build
 
