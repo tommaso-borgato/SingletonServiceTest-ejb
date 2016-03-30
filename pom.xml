@@ -5,7 +5,7 @@
 
     <groupId>org.jboss.test</groupId>
     <artifactId>SStest-ejb</artifactId>
-    <version>7.1-SNAPSHOT</version>
+    <version>7.1</version>
 
     <name>SingletonServiceTest - Parent</name>
     <packaging>pom</packaging>
