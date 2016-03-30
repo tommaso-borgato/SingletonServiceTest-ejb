@@ -12,8 +12,8 @@ public class ServiceAccessBean implements ServiceAccess {
 
     public String getNodeNameOfService() {
         LOGGER.info("getNodeNameOfService() is called");
-        ServiceController<?> service = CurrentServiceContainer.getServiceContainer().getService(
-                TestingSingletonService.SERVICE_NAME);
+        ServiceController<?> service = CurrentServiceContainer.getServiceContainer()
+                .getService(TestingSingletonService.SERVICE_NAME);
         LOGGER.fine("Service: " + service);
 
         if (service != null) {

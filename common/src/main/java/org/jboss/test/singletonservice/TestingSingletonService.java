@@ -19,7 +19,7 @@ public class TestingSingletonService implements Service<String> {
 
     public static final ServiceName SERVICE_NAME = ServiceName.JBOSS.append("test", "myservice");
 
-    final InjectedValue<ServerEnvironment> env = new InjectedValue<ServerEnvironment>();
+    final InjectedValue<ServerEnvironment> env = new InjectedValue<>();
 
     private AtomicBoolean started = new AtomicBoolean(false);
     private String nodeName;
