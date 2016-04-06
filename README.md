@@ -5,7 +5,7 @@
 Testing applications for HA singleton MSC services. Each of the applications will be deployed on all cluster nodes,
 but the service will be active only on one node at any given time.
 
-The project is structured into 4 modules:
+The project is structured into 4 main modules with 1 additional module for manual testing:
 
 ### Public API (`api`)
 
@@ -41,6 +41,11 @@ An application that activates the singleton service using `ServiceActivator` and
 in the `singleton` subsystem.
 
 - `SingletonActivator`, which is a `ServiceActivator` that installs and activates the `TestingSingletonService`
+
+### Standalone Client for Manual Testing (`client`)
+
+- `Main`, which is a Java application that uses JBoss EJB Client to invoke the `ServiceAccessBean` remotely;
+  it is not used for automated tests, but can be easily used for manual testing when required
 
 ## Build
 
