@@ -17,7 +17,16 @@ public class ServiceAccessBean implements ServiceAccess {
         LOGGER.fine("Service: " + service);
 
         if (service != null) {
-            return (String) service.getValue();
+            String serviceValue = null;
+            try {
+                serviceValue = (String) service.awaitValue();
+            } catch (IllegalStateException e) {
+                LOGGER.info("Service was either removed or failed to start: " + e.getMessage());
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            }
+
+            return serviceValue;
         } else {
             throw new IllegalStateException("Service '" + TestingSingletonService.SERVICE_NAME + "' not found!");
         }
