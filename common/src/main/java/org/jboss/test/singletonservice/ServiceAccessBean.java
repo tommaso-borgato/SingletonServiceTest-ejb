@@ -4,6 +4,7 @@ import org.jboss.as.server.CurrentServiceContainer;
 import org.jboss.msc.service.ServiceController;
 
 import javax.ejb.Stateless;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Stateless
@@ -21,7 +22,7 @@ public class ServiceAccessBean implements ServiceAccess {
             try {
                 serviceValue = (String) service.awaitValue();
             } catch (IllegalStateException e) {
-                LOGGER.info("Service was either removed or failed to start: " + e.getMessage());
+                LOGGER.log(Level.SEVERE, "Service was either removed or failed to start: ", e);
             } catch (InterruptedException ie) {
                 Thread.currentThread().interrupt();
             }
