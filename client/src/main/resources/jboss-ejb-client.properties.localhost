@@ -1,0 +1,27 @@
+remote.connectionprovider.create.options.org.xnio.Options.SSL_ENABLED=false
+
+remote.connections=node1,node2,node3,node4
+
+remote.connection.node1.host=localhost
+remote.connection.node1.port=8180
+remote.connection.node1.connect.options.org.xnio.Options.SASL_POLICY_NOANONYMOUS=false
+
+remote.connection.node2.host=localhost
+remote.connection.node2.port=8280
+remote.connection.node2.connect.options.org.xnio.Options.SASL_POLICY_NOANONYMOUS=false
+
+remote.connection.node3.host=localhost
+remote.connection.node3.port=8380
+remote.connection.node3.connect.options.org.xnio.Options.SASL_POLICY_NOANONYMOUS=false
+
+remote.connection.node4.host=localhost
+remote.connection.node4.port=8480
+remote.connection.node4.connect.options.org.xnio.Options.SASL_POLICY_NOANONYMOUS=false
+
+# remote.connection.default.host=perf18.mw.lab.eng.bos.redhat.com
+# remote.connection.default.port=8080
+# invocation.timeout=120000
+# remote.connection.default.connect.options.org.xnio.Options.SASL_POLICY_NOANONYMOUS=false
+# remote.connection.default.channel.options.org.jboss.remoting3.RemotingOptions.MAX_OUTBOUND_MESSAGES=30000
+# remote.connection.default.username=joe
+# remote.connection.default.password=joeIsAwesome2013!

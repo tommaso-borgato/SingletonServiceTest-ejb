@@ -1,5 +1,45 @@
 # SingletonServiceTest-ejb
 
+## Background
+
+### WildFly Configuration
+
+WildFly is configured to support singleton services;
+In `standalone-ha.xml` we find the `singleton` configuration that relies on some `replicated-cache` to track on which
+nodes of the cluster the service is installed:
+
+```    
+    <subsystem xmlns="urn:jboss:domain:infinispan:7.0">
+        <cache-container name="server" aliases="singleton cluster" default-cache="default" module="org.wildfly.clustering.server">
+            <transport lock-timeout="60000"/>
+            <replicated-cache name="default">
+                <transaction mode="BATCH"/>
+            </replicated-cache>
+        </cache-container>
+        ...
+    </subsystem>
+    ...
+    <subsystem xmlns="urn:jboss:domain:singleton:1.0">
+        <singleton-policies default="default">
+            <singleton-policy name="default" cache-container="server">
+                <simple-election-policy/>
+            </singleton-policy>
+        </singleton-policies>
+    </subsystem>
+```
+
+### How it works
+
+This application performs the following steps:
+
+- WildFly reads `META-INF/services/org.jboss.msc.service.ServiceActivator` and starts `org.jboss.test.singletonservice.SingletonActivator`
+- `org.jboss.test.singletonservice.SingletonActivator` installs `org.jboss.test.singletonservice.TestingSingletonService` on each node with some election policy
+- if the current node is the elected one, then `org.jboss.test.singletonservice.TestingSingletonService` is started 
+- `org.jboss.test.singletonservice.TestingSingletonService` starts the `org.jboss.test.singletonservice.MyTimerBean`
+
+Once the `org.jboss.test.singletonservice.TestingSingletonService` is running on one node, it can be invoked via the `org.jboss.test.singletonservice.ServiceAccessBean` 
+that is invoked remotely by some EJB Client Application.
+
 ## Description
 
 Testing applications for HA singleton MSC services. Each of the applications will be deployed on all cluster nodes,

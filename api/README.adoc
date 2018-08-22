@@ -1,0 +1,191 @@
+== EJB Client Jars
+
+=== backgound
+Some history here https://mojo.redhat.com/docs/DOC-134443
+
+=== sources
+
+Sources are here:
+
+- https://github.com/wildfly/jboss-ejb-client for EJB client 4.x
+- https://github.com/wildfly/jboss-ejb-client/tree/3.x for EJB client 3.x ("legacy")
+
+=== EJB tests
+
+We have two kind of EJB tests:
+
+- regular tests that use EJB client 4.x
+- tests marked as "legacy" that use EJB client 3.x
+
+JBoss distribution contains so called "fat" jar:
+
+----
+[tborgato@tborgato Downloads]$ unzip -l jboss-eap-7.2.0.CD14.CR2.zip | grep jboss-client.jar
+ 18864131  09-24-2018 09:01   jboss-eap-7.2/bin/client/jboss-client.jar
+----
+
+and the module jar which we are not interested in:
+
+----
+[tborgato@tborgato Downloads]$ unzip -l jboss-eap-7.2.0.CD14.CR2.zip | grep jboss-ejb-client | grep -v xsd
+   417273  09-24-2018 09:01   jboss-eap-7.2/modules/system/layers/base/org/jboss/ejb-client/main/jboss-ejb-client-4.0.11.Final-redhat-1.jar
+----
+
+For our regular tests that use EJB client 4.x we can:
+
+- use the "fat" jar jboss-eap-7.2/bin/client/jboss-client.jar in the distribution: we use upload-dependencies job
+- use the EAP bom
+
+For tests marked as "legacy" that use EJB client 3.x we can only specify maven dependencies, using the EAP bom file to get the correct version.
+
+
+== eap-7x-clustering-utility-jobs-deploy-controller-client_JJB
+
+The goal of this job is to deploy into maven qa repository http://repository.engineering.redhat.com/nexus/content/repositories/jboss-qa-releases:
+
+- the "fat" jar
+- the jboss-cli-client-jar
+
+Basically this jobs performs the following actions:
+
+- unzip jboss-eap-7.2.0.CD14.CR2.zip to get jboss-client.jar, jboss-cli-client.jar and their dependencies
+- deploys all those jars to http://repository.engineering.redhat.com/nexus/content/repositories/jboss-qa-releases with group "" and artifact with prefix
+
+[source,bash]
+----
+########## CLEAN ALL
+rm -rf *
+
+########## UNZIP AND PREPARE ENV
+unzip -q ${HUDSON_STATIC_ENV}/eap/${EAP_VERSION}/jboss-eap-${EAP_VERSION}.zip
+export JBOSS_HOME=`pwd`/jboss-eap-${EAP_VERSION:0:3}
+mkdir cc
+
+########## COPY JARS
+cp ${JBOSS_HOME}/bin/client/jboss-client.jar cc/jboss-client.jar
+cp ${JBOSS_HOME}/bin/client/jboss-cli-client.jar cc/jboss-cli-client.jar
+cp ${JBOSS_HOME}/modules/system/layers/base/org/jboss/as/controller-client/main/wildfly-controller-client-*.jar cc/wildfly-controller-client.jar
+cp ${JBOSS_HOME}/modules/system/layers/base/org/jboss/as/protocol/main/wildfly-protocol-*.jar cc/wildfly-protocol.jar
+cp ${JBOSS_HOME}/modules/system/layers/base/org/jboss/dmr/main/jboss-dmr-*.jar cc/jboss-dmr.jar
+cp ${JBOSS_HOME}/modules/system/layers/base/org/jboss/threads/main/jboss-threads-*.jar cc/jboss-threads.jar
+
+########## DEPLOY JARS
+cd cc
+wget https://svn.devel.redhat.com/repos/jboss-qa/load-testing/tools/EAP-client-jars-mvn-deployer/jars-deployer.sh --no-check-certificate
+
+# fail when something goes wrong
+sh jars-deployer.sh . ${EAP_VERSION}
+----
+
+jars-deployer.sh:
+[source,bash]
+----
+#!/bin/sh
+# Script to deploy EAP client side libs into maven qa repository.
+# After that generate and deploy parent pom similar to jboss-as-client pom file for EAP.
+#
+# You will need credentials for the repository in your settings.xml, see
+# https://docspace.corp.redhat.com/docs/DOC-29753#Updating_libs for details.
+#
+# Use unsigned jars! For example:
+# for file in `ls *.jar`; do /home/rsvoboda/svn/config_repository/scripts/tck/tck5/unsigner.sh $file; done
+#
+# parameters:  path_to_client_folder client_libs_version [send_signed]
+#
+
+## test folder
+if [ ! -d "$1" ]; then
+    echo "Folder doesn't exist: $1"
+    exit 1
+fi
+## test version
+if [ x$2 = "x" ]; then
+    echo "Version for maven isn't specified"
+    exit 1
+fi
+#
+SEND_SIGNED=false;
+if [ x$3 = "xsend_signed" ]; then
+    SEND_SIGNED=true;
+fi
+## test for unsigned jars
+SIGNED=false;
+for i in `find $1 -maxdepth 1 -name "*.jar" -type f`; do
+  COUNT=`unzip -l $i | grep JBOSSCOD | wc -l`
+  if [ $COUNT -gt 0 ]; then
+      echo $i is signed
+      SIGNED=true;
+  fi
+done
+if [ $SIGNED = "true" ]; then
+    if [ $SEND_SIGNED = "true" ]; then
+      	echo "Some jars are signed, but send_signed is enabled."
+    else
+      	echo "SIGNED jars can't be deployed."
+      	exit 1
+    fi
+else
+    echo "NICE, all jars are unsigned."
+fi
+
+REPO_URL=http://repository.engineering.redhat.com/nexus/content/repositories/jboss-qa-releases
+REPO_ID=jboss-qa-releases
+GROUP=eap
+ARTIFACT_PREFIX=eap
+VERSION=$2
+PARENT_ARTIFACT_PREFIX=$ARTIFACT_PREFIX-client
+PARENT_POM_FILE=$PARENT_ARTIFACT_PREFIX-$VERSION.pom
+
+## grep files
+for i in `find $1 -maxdepth 1 -name "*.jar" -type f`; do
+  JAR_PATH=$i
+##  JAR_NAME=`echo $i | sed 's/\(.*\/\)\(.*\)\(\.jar\)$/\2/g'`
+  FILE_NAME=`basename $i`
+  JAR_NAME=`echo ${FILE_NAME%.jar}`
+
+  ## generate mvn deploy commands
+  mvn -B deploy:deploy-file -Durl=$REPO_URL -DrepositoryId=$REPO_ID -Dfile=$JAR_PATH -DgeneratePom=true -DgroupId=$GROUP -DartifactId=$ARTIFACT_PREFIX-$JAR_NAME -Dversion=$VERSION -Dpackaging=jar
+done
+
+## generate pom
+
+echo "<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd\">"  > $PARENT_POM_FILE
+echo "  <modelVersion>4.0.0</modelVersion>"						>> $PARENT_POM_FILE
+echo "  <groupId>$GROUP</groupId>"							>> $PARENT_POM_FILE
+echo "  <artifactId>$PARENT_ARTIFACT_PREFIX</artifactId>"					>> $PARENT_POM_FILE
+echo "  <version>$VERSION</version>"							>> $PARENT_POM_FILE
+echo "  <packaging>pom</packaging>"							>> $PARENT_POM_FILE
+echo "  <name>JBoss EAP Client POM</name>"						>> $PARENT_POM_FILE
+echo "  <description>JBoss EAP Client Dependency POM</description>"			>> $PARENT_POM_FILE
+echo "  <url>http://www.jboss.com/products/platforms/application/features/</url>"	>> $PARENT_POM_FILE
+echo "  <dependencies>"									>> $PARENT_POM_FILE
+
+
+for i in `find $1 -maxdepth 1 -name "*.jar" -type f`; do
+  JAR_NAME=`echo $i | sed 's/\(.*\/\)\(.*\)\(\.jar\)$/\2/g'`
+  echo "    <dependency>"					>> $PARENT_POM_FILE
+  echo "      <groupId>$GROUP</groupId>"			>> $PARENT_POM_FILE
+  echo "      <artifactId>$ARTIFACT_PREFIX-$JAR_NAME</artifactId>"	>> $PARENT_POM_FILE
+  echo "      <version>$VERSION</version>"			>> $PARENT_POM_FILE
+  echo "    </dependency>"					>> $PARENT_POM_FILE
+done
+
+echo "  </dependencies>" 					>> $PARENT_POM_FILE
+echo "   <repositories>" 					>> $PARENT_POM_FILE
+echo "      <repository>" 					>> $PARENT_POM_FILE
+echo "         <id>jboss-qa-releases</id>" 							>> $PARENT_POM_FILE
+echo "         <name>JBoss QA release repository</name>" 					>> $PARENT_POM_FILE
+echo "         <url>http://nexus.qa.jboss.com:8081/nexus/content/repositories/releases</url>" 	>> $PARENT_POM_FILE
+echo "      </repository>" 					>> $PARENT_POM_FILE
+echo "      <repository>" 					>> $PARENT_POM_FILE
+echo "         <id>jboss-qa-snapshots</id>"			>> $PARENT_POM_FILE
+echo "         <name>JBoss QA snapshot repository</name>" 	>> $PARENT_POM_FILE
+echo "         <url>http://nexus.qa.jboss.com:8081/nexus/content/repositories/snapshots</url>" 	>> $PARENT_POM_FILE
+echo "      </repository>" 					>> $PARENT_POM_FILE
+echo "   </repositories>" 					>> $PARENT_POM_FILE
+echo "</project>"         					>> $PARENT_POM_FILE
+
+
+## generate mvn deploy command
+mvn -B deploy:deploy-file -Durl=$REPO_URL -DrepositoryId=$REPO_ID -Dfile=$PARENT_POM_FILE -DgroupId=$GROUP -DartifactId=$PARENT_ARTIFACT_PREFIX -Dversion=$VERSION -Dpackaging=pom  -DgeneratePom=false
+----
