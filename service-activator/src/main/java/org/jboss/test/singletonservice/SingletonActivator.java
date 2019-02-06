@@ -10,7 +10,7 @@ import org.jboss.msc.service.ServiceTarget;
 import org.wildfly.clustering.group.Group;
 import org.wildfly.clustering.service.ActiveServiceSupplier;
 import org.wildfly.clustering.singleton.SingletonDefaultRequirement;
-import org.wildfly.clustering.singleton.SingletonPolicy;
+import org.wildfly.clustering.singleton.service.SingletonPolicy;
 
 import java.time.Duration;
 import java.util.function.Consumer;
@@ -28,13 +28,16 @@ public class SingletonActivator implements ServiceActivator {
     public void activate(ServiceActivatorContext context) throws ServiceRegistryException {
         LOGGER.info(String.format(
                 "\n=====================================================================\n" +
-                        "ACTIVATOR: TestingSingletonService will be activated with service name '%s'" +
-                        "\n=====================================================================", HaSingletonService.SINGLETON_SERVICE_NAME));
+                "ACTIVATOR: HA Singleton Service '{}' will be activated with service name '%s'" +
+                "\n=====================================================================",
+                HaSingletonService.class.getName(),
+                HaSingletonService.SINGLETON_SERVICE_NAME));
         installWithCustomElectionPolicy(context);
     }
 
     /**
      * New API
+     *
      * @param context
      */
     private void installWithCustomElectionPolicy(ServiceActivatorContext context) {
@@ -52,8 +55,7 @@ public class SingletonActivator implements ServiceActivator {
         Service service = new HaSingletonService(
                 group,
                 nodeName);
-        builder
-                .setInstance(service)
+        builder.setInstance(service)
                 .install();
     }
 }

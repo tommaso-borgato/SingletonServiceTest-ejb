@@ -26,7 +26,7 @@ public class ServiceAccessBean implements ServiceAccess {
 
         String serviceValue = haSingletonServiceInvoker.invokeLocal();
         if (serviceValue != null) {
-            LOGGER.info(String.format("Service %s is on current node (%s)", HaSingletonService.SINGLETON_SERVICE_NAME, channelGroup.getLocalNode()));
+            LOGGER.info(String.format("Service %s is on current node (%s)", HaSingletonService.SINGLETON_SERVICE_NAME, channelGroup.getLocalMember()));
             //LOGGER.info("====================================================================");
             return serviceValue;
         } else {
